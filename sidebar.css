@@ -1,0 +1,60 @@
+/* 侧边栏样式 */
+:root {
+    --primary-color: #3498db;
+    --secondary-color: #2c3e50;
+    --success-color: #2ecc71;
+    --danger-color: #e74c3c;
+    --warning-color: #f39c12;
+    --info-color: #1abc9c;
+}
+
+.sidebar {
+    min-height: 100vh;
+    background-color: var(--secondary-color);
+    color: white;
+    position: fixed;
+    width: 250px;
+}
+
+.content {
+    margin-left: 250px;
+    padding: 20px;
+}
+
+.sidebar-header {
+    padding: 20px;
+    text-align: center;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.sidebar-menu {
+    padding: 0;
+    list-style: none;
+}
+
+.sidebar-menu li {
+    padding: 15px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    transition: all 0.3s;
+}
+
+.sidebar-menu li:hover {
+    background-color: rgba(255,255,255,0.1);
+}
+
+.sidebar-menu li a {
+    color: white;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+}
+
+.sidebar-menu li i {
+    margin-right: 10px;
+    width: 20px;
+    text-align: center;
+}
+
+.sidebar-menu li.active {
+    background-color: rgba(255,255,255,0.2);
+} 

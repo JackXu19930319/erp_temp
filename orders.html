@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>訂單追蹤 - 企業管理系統</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- 引入側邊欄CSS -->
+    <link rel="stylesheet" href="sidebar.css">
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2c3e50;
+            --success-color: #2ecc71;
+            --danger-color: #e74c3c;
+            --warning-color: #f39c12;
+            --info-color: #1abc9c;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background-color: #f8f9fa;
+        }
+
+        .card {
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            border: none;
+        }
+
+        .card-header {
+            background-color: white;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            font-weight: bold;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border: none;
+        }
+
+        .status-badge {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8em;
+        }
+
+        .order-item {
+            transition: all 0.3s;
+        }
+
+        .order-item:hover {
+            background-color: rgba(0, 0, 0, 0.02);
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: 30px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 15px;
+            border-left: 2px dashed #dee2e6;
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 15px;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -20px;
+            top: 0;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+        }
+
+        .progress-track {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+
+        .progress-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            flex: 1;
+            text-align: center;
+        }
+
+        .progress-step:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: calc(50% + 20px);
+            width: calc(100% - 40px);
+            height: 2px;
+            background-color: #dee2e6;
+        }
+
+        .progress-step.completed:not(:last-child)::after {
+            background-color: var(--success-color);
+        }
+
+        .progress-step-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #dee2e6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 10px;
+            z-index: 1;
+        }
+
+        .progress-step.completed .progress-step-icon {
+            background-color: var(--success-color);
+            color: white;
+        }
+
+        .progress-step.active .progress-step-icon {
+            background-color: var(--primary-color);
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- 側邊導航 -->
+    <div id="sidebar-container"></div>
+
+    <!-- 主要內容區域 -->
+    <div class="content">
+        <div class="container-fluid">
+            <div class="row mb-4">
+                <div class="col-md-8">
+                    <h2>訂單追蹤</h2>
+                    <p class="text-muted">管理和追蹤生產訂單流程</p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#createOrderModal"
+                        title="創建新訂單" aria-label="創建新訂單">
+                        <i class="fas fa-plus"></i> 創建新訂單
+                    </button>
+                </div>
+            </div>
+
+            <!-- 搜索和篩選 -->
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                        <input type="text" class="form-control" placeholder="搜索訂單號或客戶"
+                                            aria-label="搜索訂單">
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <select class="form-select" aria-label="訂單狀態篩選">
+                                        <option selected>訂單狀態</option>
+                                        <option>待確認</option>
+                                        <option>生產中</option>
+                                        <option>待發貨</option>
+                                        <option>已發貨</option>
+                                        <option>已完成</option>
+                                        <option>已取消</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <select class="form-select" aria-label="客戶篩選">
+                                        <option selected>選擇客戶</option>
+                                        <option>宏遠科技</option>
+                                        <option>峰創實業</option>
+                                        <option>亞洲材料</option>
+                                        <option>龍智科技</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <select class="form-select" aria-label="負責人篩選">
+                                        <option selected>負責人</option>
+                                        <option>張小紅</option>
+                                        <option>王大明</option>
+                                        <option>趙麗麗</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <input type="date" class="form-control" placeholder="日期範圍" aria-label="訂單日期">
+                                </div>
+                                <div class="col-md-1">
+                                    <button class="btn btn-primary w-100" title="應用篩選" aria-label="應用篩選">篩選</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 訂單看板 -->
+            <div class="row mb-4">
+                <div class="col">
+                    <div class="card">
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th class="text-center" style="width: 20%">待確認 <span
+                                                    class="badge bg-secondary">3</span></th>
+                                            <th class="text-center" style="width: 20%">生產中 <span
+                                                    class="badge bg-warning text-dark">5</span></th>
+                                            <th class="text-center" style="width: 20%">待發貨 <span
+                                                    class="badge bg-info">4</span></th>
+                                            <th class="text-center" style="width: 20%">已發貨 <span
+                                                    class="badge bg-primary">8</span></th>
+                                            <th class="text-center" style="width: 20%">已完成 <span
+                                                    class="badge bg-success">12</span></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td class="p-0">
+                                                <div class="p-2" style="max-height: 300px; overflow-y: auto;">
+                                                    <div class="card mb-2">
+                                                        <div class="card-body p-2">
+                                                            <h6>ORD-2023-1008</h6>
+                                                            <p class="mb-1"><small>客戶: 宏遠科技</small></p>
+                                                            <p class="mb-1"><small>產品: 電路板外殼</small></p>
+                                                            <p class="mb-1"><small>日期: 2023-06-18</small></p>
+                                                            <div class="text-end">
+                                                                <button class="btn btn-sm btn-outline-primary"
+                                                                    title="查看詳情" data-bs-toggle="modal" data-bs-target="#orderDetailModal"><i class="fas fa-eye"></i></button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="card mb-2">
+                                                        <div class="card-body p-2">
+                                                            <h6>ORD-2023-1009</h6>
+                                                            <p class="mb-1"><small>客戶: 峰創實業</small></p>
+                                                            <p class="mb-1"><small>產品: 塑料外殼</small></p>
+                                                            <p class="mb-1"><small>日期: 2023-06-17</small></p>
+                                                            <div class="text-end">
+                                                                <button class="btn btn-sm btn-outline-primary"
+                                                                    title="查看詳情" data-bs-toggle="modal" data-bs-target="#orderDetailModal"><i class="fas fa-eye"></i></button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="p-0">
+                                                <div class="p-2" style="max-height: 300px; overflow-y: auto;">
+                                                    <div class="card mb-2">
+                                                        <div class="card-body p-2">
+                                                            <h6>ORD-2023-1004</h6>
+                                                            <p class="mb-1"><small>客戶: 龍智科技</small></p>
+                                                            <p class="mb-1"><small>產品: 散熱器零件</small></p>
+                                                            <p class="mb-1"><small>日期: 2023-06-12</small></p>
+                                                            <p class="mb-1"><small>進度: 45%</small></p>
+                                                            <div class="progress mb-2" style="height: 5px;">
+                                                                <div class="progress-bar bg-warning" role="progressbar"
+                                                                    style="width: 45%" aria-valuenow="45"
+                                                                    aria-valuemin="0" aria-valuemax="100"></div>
+                                                            </div>
+                                                            <div class="text-end">
+                                                                <button class="btn btn-sm btn-outline-primary"
+                                                                    title="查看詳情" data-bs-toggle="modal" data-bs-target="#orderDetailModal"><i class="fas fa-eye"></i></button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="card mb-2">
+                                                        <div class="card-body p-2">
+                                                            <h6>ORD-2023-1001</h6>
+                                                            <p class="mb-1"><small>客戶: 宏遠科技</small></p>
+                                                            <p class="mb-1"><small>產品: 電子元件外殼</small></p>
+                                                            <p class="mb-1"><small>日期: 2023-06-15</small></p>
+                                                            <p class="mb-1"><small>進度: 60%</small></p>
+                                                            <div class="progress mb-2" style="height: 5px;">
+                                                                <div class="progress-bar bg-warning" role="progressbar"
+                                                                    style="width: 60%" aria-valuenow="60"
+                                                                    aria-valuemin="0" aria-valuemax="100"></div>
+                                                            </div>
+                                                            <div class="text-end">
+                                                                <button class="btn btn-sm btn-outline-primary"
+                                                                    title="查看詳情" data-bs-toggle="modal" data-bs-target="#orderDetailModal"><i class="fas fa-eye"></i></button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="p-0">
+                                                <div class="p-2" style="max-height: 300px; overflow-y: auto;">
+                                                    <div class="card mb-2">
+                                                        <div class="card-body p-2">
+                                                            <h6>ORD-2023-1002</h6>
+                                                            <p class="mb-1"><small>客戶: 峰創實業</small></p>
+                                                            <p class="mb-1"><small>產品: 塑料注塑件</small></p>
+                                                            <p class="mb-1"><small>日期: 2023-06-10</small></p>
+                                                            <div class="text-end">
+                                                                <button class="btn btn-sm btn-outline-primary"
+                                                                    title="查看詳情" data-bs-toggle="modal" data-bs-target="#orderDetailModal"><i class="fas fa-eye"></i></button>
+                                                                <button class="btn btn-sm btn-outline-success"
+                                                                    title="標記為已發貨"><i class="fas fa-truck"></i></button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="p-0">
+                                                <div class="p-2" style="max-height: 300px; overflow-y: auto;">
+                                                    <div class="card mb-2">
+                                                        <div class="card-body p-2">
+                                                            <h6>ORD-2023-1003</h6>
+                                                            <p class="mb-1"><small>客戶: 亞洲材料公司</small></p>
+                                                            <p class="mb-1"><small>產品: 金屬沖壓件</small></p>
+                                                            <p class="mb-1"><small>日期: 2023-06-05</small></p>
+                                                            <p class="mb-1"><small>發貨日期: 2023-06-18</small></p>
+                                                            <div class="text-end">
+                                                                <button class="btn btn-sm btn-outline-primary"
+                                                                    title="查看詳情" data-bs-toggle="modal" data-bs-target="#orderDetailModal"><i class="fas fa-eye"></i></button>
+                                                                <button class="btn btn-sm btn-outline-success"
+                                                                    title="標記為已完成"><i class="fas fa-check"></i></button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="p-0">
+                                                <div class="p-2" style="max-height: 300px; overflow-y: auto;">
+                                                    <div class="card mb-2">
+                                                        <div class="card-body p-2">
+                                                            <h6>ORD-2023-0998</h6>
+                                                            <p class="mb-1"><small>客戶: 龍智科技</small></p>
+                                                            <p class="mb-1"><small>產品: 電子電路板</small></p>
+                                                            <p class="mb-1"><small>完成日期: 2023-06-01</small></p>
+                                                            <div class="text-end">
+                                                                <button class="btn btn-sm btn-outline-primary"
+                                                                    title="查看詳情" data-bs-toggle="modal" data-bs-target="#orderDetailModal"><i class="fas fa-eye"></i></button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 訂單列表 -->
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span>所有訂單</span>
+                            <div>
+                                <button class="btn btn-sm btn-outline-secondary" title="導出Excel">
+                                    <i class="fas fa-file-excel me-1"></i> 導出
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary" title="打印">
+                                    <i class="fas fa-print me-1"></i> 打印
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" id="selectAll"
+                                                        title="選擇所有訂單" aria-label="選擇所有訂單">
+                                                </div>
+                                            </th>
+                                            <th>訂單號</th>
+                                            <th>客戶</th>
+                                            <th>產品</th>
+                                            <th>數量</th>
+                                            <th>訂單金額</th>
+                                            <th>下單日期</th>
+                                            <th>交付日期</th>
+                                            <th>狀態</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr class="order-item">
+                                            <td>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" title="選擇此訂單"
+                                                        aria-label="選擇訂單ORD-2023-1001">
+                                                </div>
+                                            </td>
+                                            <td><a href="#" class="fw-bold text-primary">ORD-2023-1001</a></td>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="bg-primary text-white rounded-circle p-2 me-2 text-center"
+                                                        style="width:35px;height:35px;">
+                                                        <i class="fas fa-building"></i>
+                                                    </div>
+                                                    <div>
+                                                        宏遠科技<br>
+                                                        <small class="text-muted">李經理</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>電子元件外殼</td>
+                                            <td>1,000</td>
+                                            <td>¥38,500</td>
+                                            <td>2023-06-15</td>
+                                            <td>2023-07-05</td>
+                                            <td><span class="badge bg-warning text-dark status-badge">生產中</span></td>
+                                            <td>
+                                                <div class="dropdown">
+                                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
+                                                        type="button" data-bs-toggle="dropdown" aria-expanded="false"
+                                                        title="更多操作">
+                                                        操作
+                                                    </button>
+                                                    <ul class="dropdown-menu">
+                                                        <li><a class="dropdown-item" href="#" data-bs-toggle="modal"
+                                                                data-bs-target="#orderDetailModal"><i
+                                                                    class="fas fa-eye me-2"></i>查看詳情</a></li>
+                                                        <li><a class="dropdown-item" href="#"><i
+                                                                    class="fas fa-edit me-2"></i>編輯訂單</a></li>
+                                                        <li><a class="dropdown-item" href="#"><i
+                                                                    class="fas fa-sync me-2"></i>更新狀態</a></li>
+                                                        <li><a class="dropdown-item" href="#"><i
+                                                                    class="fas fa-comment me-2"></i>添加備註</a></li>
+                                                        <li><a class="dropdown-item" href="#"><i
+                                                                    class="fas fa-file-pdf me-2"></i>生成訂單PDF</a></li>
+                                                        <li>
+                                                            <hr class="dropdown-divider">
+                                                        </li>
+                                                        <li><a class="dropdown-item text-danger" href="#"><i
+                                                                    class="fas fa-times-circle me-2"></i>取消訂單</a></li>
+                                                    </ul>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr class="order-item">
+                                            <td>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" title="選擇此訂單"
+                                                        aria-label="選擇訂單ORD-2023-1002">
+                                                </div>
+                                            </td>
+                                            <td><a href="#" class="fw-bold text-primary">ORD-2023-1002</a></td>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="bg-info text-white rounded-circle p-2 me-2 text-center"
+                                                        style="width:35px;height:35px;">
+                                                        <i class="fas fa-building"></i>
+                                                    </div>
+                                                    <div>
+                                                        峰創實業<br>
+                                                        <small class="text-muted">張總</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>塑料注塑件</td>
+                                            <td>500</td>
+                                            <td>¥22,800</td>
+                                            <td>2023-06-10</td>
+                                            <td>2023-06-30</td>
+                                            <td><span class="badge bg-info text-white status-badge">待發貨</span></td>
+                                            <td>
+                                                <div class="dropdown">
+                                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
+                                                        type="button" data-bs-toggle="dropdown" aria-expanded="false"
+                                                        title="更多操作">
+                                                        操作
+                                                    </button>
+                                                    <ul class="dropdown-menu">
+                                                        <li><a class="dropdown-item" href="#"><i
+                                                                    class="fas fa-eye me-2"></i>查看詳情</a></li>
+                                                        <li><a class="dropdown-item" href="#"><i
+                                                                    class="fas fa-edit me-2"></i>編輯訂單</a></li>
+                                                        <li><a class="dropdown-item" href="#"><i
+                                                                    class="fas fa-sync me-2"></i>更新狀態</a></li>
+                                                        <li><a class="dropdown-item" href="#"><i
+                                                                    class="fas fa-truck me-2"></i>標記為已發貨</a></li>
+                                                        <li><a class="dropdown-item" href="#"><i
+                                                                    class="fas fa-file-pdf me-2"></i>生成訂單PDF</a></li>
+                                                        <li>
+                                                            <hr class="dropdown-divider">
+                                                        </li>
+                                                        <li><a class="dropdown-item text-danger" href="#"><i
+                                                                    class="fas fa-times-circle me-2"></i>取消訂單</a></li>
+                                                    </ul>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr class="order-item">
+                                            <td>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" title="選擇此訂單"
+                                                        aria-label="選擇訂單ORD-2023-1003">
+                                                </div>
+                                            </td>
+                                            <td><a href="#" class="fw-bold text-primary">ORD-2023-1003</a></td>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="bg-warning text-white rounded-circle p-2 me-2 text-center"
+                                                        style="width:35px;height:35px;">
+                                                        <i class="fas fa-building"></i>
+                                                    </div>
+                                                    <div>
+                                                        亞洲材料公司<br>
+                                                        <small class="text-muted">王經理</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>金屬沖壓件</td>
+                                            <td>2,000</td>
+                                            <td>¥56,000</td>
+                                            <td>2023-06-05</td>
+                                            <td>2023-06-25</td>
+                                            <td><span class="badge bg-success text-white status-badge">已發貨</span></td>
+                                            <td>
+                                                <div class="dropdown">
+                                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
+                                                        type="button" data-bs-toggle="dropdown" aria-expanded="false"
+                                                        title="更多操作">
+                                                        操作
+                                                    </button>
+                                                    <ul class="dropdown-menu">
+                                                        <li><a class="dropdown-item" href="#"><i
+                                                                    class="fas fa-eye me-2"></i>查看詳情</a></li>
+                                                        <li><a class="dropdown-item" href="#"><i
+                                                                    class="fas fa-sync me-2"></i>更新狀態</a></li>
+                                                        <li><a class="dropdown-item" href="#"><i
+                                                                    class="fas fa-check-circle me-2"></i>標記為已完成</a></li>
+                                                        <li><a class="dropdown-item" href="#"><i
+                                                                    class="fas fa-file-pdf me-2"></i>生成訂單PDF</a></li>
+                                                        <li><a class="dropdown-item" href="#"><i
+                                                                    class="fas fa-clipboard-check me-2"></i>生成驗收單</a>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr class="order-item">
+                                            <td>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" title="選擇此訂單"
+                                                        aria-label="選擇訂單ORD-2023-1004">
+                                                </div>
+                                            </td>
+                                            <td><a href="#" class="fw-bold text-primary">ORD-2023-1004</a></td>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="bg-danger text-white rounded-circle p-2 me-2 text-center"
+                                                        style="width:35px;height:35px;">
+                                                        <i class="fas fa-building"></i>
+                                                    </div>
+                                                    <div>
+                                                        龍智科技<br>
+                                                        <small class="text-muted">孫經理</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>電子電路板</td>
+                                            <td>300</td>
+                                            <td>¥45,200</td>
+                                            <td>2023-06-01</td>
+                                            <td>2023-06-20</td>
+                                            <td><span class="badge bg-secondary text-white status-badge">已完成</span></td>
+                                            <td>
+                                                <div class="dropdown">
+                                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
+                                                        type="button" data-bs-toggle="dropdown" aria-expanded="false"
+                                                        title="更多操作">
+                                                        操作
+                                                    </button>
+                                                    <ul class="dropdown-menu">
+                                                        <li><a class="dropdown-item" href="#"><i
+                                                                    class="fas fa-eye me-2"></i>查看詳情</a></li>
+                                                        <li><a class="dropdown-item" href="#"><i
+                                                                    class="fas fa-file-pdf me-2"></i>生成訂單PDF</a></li>
+                                                        <li><a class="dropdown-item" href="#"><i
+                                                                    class="fas fa-file-invoice me-2"></i>查看發票</a></li>
+                                                        <li><a class="dropdown-item" href="#"><i
+                                                                    class="fas fa-copy me-2"></i>複製為新訂單</a></li>
+                                                    </ul>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- 分頁 -->
+                            <nav aria-label="訂單分頁">
+                                <ul class="pagination justify-content-center">
+                                    <li class="page-item disabled">
+                                        <a class="page-link" href="#" tabindex="-1" aria-disabled="true">上一頁</a>
+                                    </li>
+                                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                                    <li class="page-item"><a class="page-link" href="#">2</a></li>
+                                    <li class="page-item"><a class="page-link" href="#">3</a></li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="#">下一頁</a>
+                                    </li>
+                                </ul>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 訂單詳情模態框 -->
+    <div class="modal fade" id="orderDetailModal" tabindex="-1" aria-labelledby="orderDetailModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="orderDetailModalLabel">訂單詳情 - ORD-2023-1001</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="關閉"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <!-- 訂單進度追蹤 -->
+                            <div class="progress-track">
+                                <div class="progress-step completed">
+                                    <div class="progress-step-icon">
+                                        <i class="fas fa-check"></i>
+                                    </div>
+                                    <span>訂單確認</span>
+                                    <small>2023-06-15</small>
+                                </div>
+                                <div class="progress-step completed">
+                                    <div class="progress-step-icon">
+                                        <i class="fas fa-check"></i>
+                                    </div>
+                                    <span>付款確認</span>
+                                    <small>2023-06-16</small>
+                                </div>
+                                <div class="progress-step active">
+                                    <div class="progress-step-icon">
+                                        <i class="fas fa-cog"></i>
+                                    </div>
+                                    <span>生產中</span>
+                                    <small>2023-06-18</small>
+                                </div>
+                                <div class="progress-step">
+                                    <div class="progress-step-icon">
+                                        <i class="fas fa-box"></i>
+                                    </div>
+                                    <span>待發貨</span>
+                                </div>
+                                <div class="progress-step">
+                                    <div class="progress-step-icon">
+                                        <i class="fas fa-truck"></i>
+                                    </div>
+                                    <span>已發貨</span>
+                                </div>
+                                <div class="progress-step">
+                                    <div class="progress-step-icon">
+                                        <i class="fas fa-check-circle"></i>
+                                    </div>
+                                    <span>已完成</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card mb-3">
+                                <div class="card-header">
+                                    <i class="fas fa-info-circle me-2"></i> 訂單基礎信息
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6 mb-2">
+                                            <strong>訂單編號:</strong> ORD-2023-1001
+                                        </div>
+                                        <div class="col-md-6 mb-2">
+                                            <strong>訂單日期:</strong> 2023-06-15
+                                        </div>
+                                        <div class="col-md-6 mb-2">
+                                            <strong>預計交期:</strong> 2023-07-05
+                                        </div>
+                                        <div class="col-md-6 mb-2">
+                                            <strong>訂單狀態:</strong> <span class="badge bg-warning text-dark">生產中</span>
+                                        </div>
+                                        <div class="col-md-6 mb-2">
+                                            <strong>負責人:</strong> 張小紅
+                                        </div>
+                                        <div class="col-md-6 mb-2">
+                                            <strong>付款狀態:</strong> <span class="badge bg-success">已付款</span>
+                                        </div>
+                                        <div class="col-md-12 mb-2">
+                                            <strong>訂單來源:</strong> 報價單 QT-2023-0025
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card mb-3">
+                                <div class="card-header">
+                                    <i class="fas fa-user me-2"></i> 客戶信息
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-12 mb-2">
+                                            <strong>客戶名稱:</strong> 宏遠科技有限公司
+                                        </div>
+                                        <div class="col-md-6 mb-2">
+                                            <strong>聯繫人:</strong> 李經理
+                                        </div>
+                                        <div class="col-md-6 mb-2">
+                                            <strong>電話:</strong> 13812345678
+                                        </div>
+                                        <div class="col-md-12 mb-2">
+                                            <strong>郵箱:</strong> li@hongyuan.com
+                                        </div>
+                                        <div class="col-md-12">
+                                            <strong>地址:</strong> 深圳市南山區科技園北區12棟3樓
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="card mb-3">
+                                <div class="card-header">
+                                    <i class="fas fa-clipboard-list me-2"></i> 產品信息
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>產品</th>
+                                                    <th>規格</th>
+                                                    <th>數量</th>
+                                                    <th>單價</th>
+                                                    <th>小計</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td>電子元件外殼</td>
+                                                    <td>ABS塑料, 黑色</td>
+                                                    <td>1,000</td>
+                                                    <td>¥35.00</td>
+                                                    <td>¥35,000.00</td>
+                                                </tr>
+                                                <tr>
+                                                    <td colspan="3" rowspan="3"></td>
+                                                    <td><strong>小計:</strong></td>
+                                                    <td>¥35,000.00</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><strong>稅費 (10%):</strong></td>
+                                                    <td>¥3,500.00</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><strong>總計:</strong></td>
+                                                    <td class="fw-bold">¥38,500.00</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card">
+                                <div class="card-header">
+                                    <i class="fas fa-history me-2"></i> 訂單歷史
+                                </div>
+                                <div class="card-body">
+                                    <div class="timeline">
+                                        <div class="timeline-item">
+                                            <p class="mb-0 fw-bold">張小紅 更新了訂單狀態為"生產中"</p>
+                                            <small class="text-muted">2023-06-18 09:30</small>
+                                        </div>
+                                        <div class="timeline-item">
+                                            <p class="mb-0 fw-bold">系統 自動確認收到付款</p>
+                                            <small class="text-muted">2023-06-16 15:20</small>
+                                        </div>
+                                        <div class="timeline-item">
+                                            <p class="mb-0 fw-bold">李經理 確認了訂單</p>
+                                            <small class="text-muted">2023-06-15 14:05</small>
+                                        </div>
+                                        <div class="timeline-item">
+                                            <p class="mb-0 fw-bold">張小紅 創建了訂單</p>
+                                            <small class="text-muted">2023-06-15 10:20</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <i class="fas fa-comments me-2"></i> 備註與溝通記錄
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <textarea class="form-control" rows="2" placeholder="添加備註或溝通記錄..."
+                                            aria-label="添加備註"></textarea>
+                                    </div>
+                                    <button class="btn btn-primary mb-3">
+                                        <i class="fas fa-plus"></i> 添加記錄
+                                    </button>
+                                    
+                                    <div class="card mb-2 bg-light">
+                                        <div class="card-body p-2">
+                                            <div class="d-flex justify-content-between">
+                                                <strong>張小紅 (業務員)</strong>
+                                                <small class="text-muted">2023-06-18 10:15</small>
+                                            </div>
+                                            <p class="mb-0">工廠已安排生產，預計6月25日完成生產。</p>
+                                        </div>
+                                    </div>
+                                    <div class="card mb-2 bg-light">
+                                        <div class="card-body p-2">
+                                            <div class="d-flex justify-content-between">
+                                                <strong>李經理 (客戶)</strong>
+                                                <small class="text-muted">2023-06-17 14:30</small>
+                                            </div>
+                                            <p class="mb-0">請確保產品質量符合樣品標準，包裝時注意防潮。</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">關閉</button>
+                    <button type="button" class="btn btn-primary">更新狀態</button>
+                    <button type="button" class="btn btn-success">生成訂單PDF</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 創建訂單模態框 -->
+    <div class="modal fade" id="createOrderModal" tabindex="-1" aria-labelledby="createOrderModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="createOrderModalLabel">創建新訂單</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="關閉"></button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <h5>基本信息</h5>
+                                <hr>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-3">
+                                <label class="form-label">訂單來源</label>
+                                <select class="form-select" aria-label="選擇訂單來源">
+                                    <option selected>選擇來源</option>
+                                    <option>報價單</option>
+                                    <option>直接創建</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">報價單號</label>
+                                <select class="form-select" aria-label="選擇報價單號">
+                                    <option selected>選擇報價單</option>
+                                    <option>QT-2023-0025 (宏遠科技)</option>
+                                    <option>QT-2023-0024 (峰創實業)</option>
+                                    <option>QT-2023-0023 (亞洲材料)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">負責人</label>
+                                <select class="form-select" aria-label="選擇負責人">
+                                    <option selected>選擇負責人</option>
+                                    <option>張小紅</option>
+                                    <option>王大明</option>
+                                    <option>趙麗麗</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">預計交期</label>
+                                <input type="date" class="form-control" aria-label="預計交期">
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <h5>客戶信息</h5>
+                                <hr>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">客戶名稱 <span class="text-danger">*</span></label>
+                                <select class="form-select" aria-label="選擇客戶" required>
+                                    <option selected>選擇客戶</option>
+                                    <option>宏遠科技有限公司</option>
+                                    <option>峰創實業有限公司</option>
+                                    <option>亞洲材料有限公司</option>
+                                    <option>龍智科技有限公司</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">聯繫人</label>
+                                <input type="text" class="form-control" placeholder="自動填充" aria-label="聯繫人">
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <h5>產品信息</h5>
+                                <hr>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="table-responsive">
+                                    <table class="table table-bordered">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>產品名稱</th>
+                                                <th>規格</th>
+                                                <th>數量</th>
+                                                <th>單價 (¥)</th>
+                                                <th>小計 (¥)</th>
+                                                <th>操作</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>
+                                                    <select class="form-select form-select-sm">
+                                                        <option selected>選擇產品</option>
+                                                        <option>電子元件外殼</option>
+                                                        <option>塑料注塑件</option>
+                                                        <option>金屬沖壓件</option>
+                                                    </select>
+                                                </td>
+                                                <td>
+                                                    <input type="text" class="form-control form-control-sm" value="ABS塑料, 黑色">
+                                                </td>
+                                                <td>
+                                                    <input type="number" class="form-control form-control-sm" value="1000">
+                                                </td>
+                                                <td>
+                                                    <input type="number" step="0.01" class="form-control form-control-sm" value="35.00">
+                                                </td>
+                                                <td>
+                                                    35,000.00
+                                                </td>
+                                                <td>
+                                                    <button type="button" class="btn btn-sm btn-outline-danger"><i class="fas fa-trash-alt"></i></button>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td colspan="6">
+                                                    <button type="button" class="btn btn-sm btn-outline-primary">
+                                                        <i class="fas fa-plus"></i> 添加產品
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                        <tfoot>
+                                            <tr>
+                                                <td colspan="3" rowspan="3"></td>
+                                                <td>小計:</td>
+                                                <td>35,000.00</td>
+                                                <td></td>
+                                            </tr>
+                                            <tr>
+                                                <td>稅費 (10%):</td>
+                                                <td>3,500.00</td>
+                                                <td></td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>總計:</strong></td>
+                                                <td><strong>38,500.00</strong></td>
+                                                <td></td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <h5>付款和交付信息</h5>
+                                <hr>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label">付款條件</label>
+                                <select class="form-select" aria-label="選擇付款條件">
+                                    <option selected>選擇付款條件</option>
+                                    <option>預付30%，發貨前付清70%</option>
+                                    <option>預付50%，發貨前付清50%</option>
+                                    <option>全額預付</option>
+                                    <option>貨到付款</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">交貨方式</label>
+                                <select class="form-select" aria-label="選擇交貨方式">
+                                    <option selected>選擇交貨方式</option>
+                                    <option>工廠交貨 (EXW)</option>
+                                    <option>船上交貨 (FOB)</option>
+                                    <option>成本加運費 (CFR)</option>
+                                    <option>成本加保險費加運費 (CIF)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">運輸方式</label>
+                                <select class="form-select" aria-label="選擇運輸方式">
+                                    <option selected>選擇運輸方式</option>
+                                    <option>陸運</option>
+                                    <option>空運</option>
+                                    <option>海運</option>
+                                    <option>客戶自提</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <label class="form-label">備註</label>
+                                <textarea class="form-control" rows="3" placeholder="輸入任何額外信息或特殊要求" aria-label="備註"></textarea>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary">保存為草稿</button>
+                    <button type="button" class="btn btn-success">創建訂單</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 更新訂單狀態模態框 -->
+    <div class="modal fade" id="updateStatusModal" tabindex="-1" aria-labelledby="updateStatusModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="updateStatusModalLabel">更新訂單狀態 - ORD-2023-1001</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="關閉"></button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="mb-3">
+                            <label for="orderStatus" class="form-label">選擇新狀態</label>
+                            <select class="form-select" id="orderStatus" aria-label="訂單狀態選擇">
+                                <option>待確認</option>
+                                <option selected>生產中</option>
+                                <option>待發貨</option>
+                                <option>已發貨</option>
+                                <option>已完成</option>
+                                <option>已取消</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="statusComment" class="form-label">狀態更新備註</label>
+                            <textarea class="form-control" id="statusComment" rows="3" placeholder="輸入狀態更新原因或備註信息" aria-label="狀態更新備註"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="notifyClient" class="form-check-label">通知選項</label>
+                            <div class="form-check mt-2">
+                                <input class="form-check-input" type="checkbox" id="notifyClient" checked>
+                                <label class="form-check-label" for="notifyClient">
+                                    通知客戶此次狀態更新
+                                </label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary">更新狀態</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="sidebar.js"></script>
+</body>
+</html>

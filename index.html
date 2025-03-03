@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>儀表板 - 企業管理系統</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- 引入側邊欄CSS -->
+    <link rel="stylesheet" href="sidebar.css">
+    <style>
+        /* 刪除所有側邊欄相關的CSS，只保留頁面特定的樣式 */
+        body {
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background-color: #f8f9fa;
+        }
+        
+        .card {
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            border: none;
+        }
+        
+        .card-header {
+            background-color: white;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            font-weight: bold;
+        }
+        
+        .stat-card {
+            border-left: 4px solid var(--primary-color);
+            transition: transform 0.3s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stat-card.sales {
+            border-left-color: var(--success-color);
+        }
+        
+        .stat-card.inquiries {
+            border-left-color: var(--primary-color);
+        }
+        
+        .stat-card.quotations {
+            border-left-color: var(--warning-color);
+        }
+        
+        .stat-card.orders {
+            border-left-color: var(--danger-color);
+        }
+        
+        .stat-icon {
+            font-size: 40px;
+            opacity: 0.8;
+        }
+        
+        .table-responsive {
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .nav-tabs .nav-link.active {
+            border-bottom: 2px solid var(--primary-color);
+            font-weight: bold;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            border: none;
+        }
+        
+        .status-badge {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8em;
+        }
+        
+        .modal-content {
+            border-radius: 15px;
+            border: none;
+        }
+        
+        .login-container {
+            max-width: 400px;
+            margin: 100px auto;
+        }
+    </style>
+</head>
+<body>
+
+<!-- 替換為 -->
+<div id="sidebar-container"></div>
+
+<!-- 主要內容區域 -->
+<div class="content">
+    <div class="container-fluid">
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <h2>儀表板</h2>
+                <p class="text-muted">歡迎回來，管理員</p>
+            </div>
+        </div>
+        
+        <!-- 數據統計卡片 -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card stat-card inquiries">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="card-title">客戶詢單</h5>
+                                <h3 class="stat-value">1,234</h3>
+                            </div>
+                            <div class="stat-icon">
+                                <i class="fas fa-question-circle"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card quotations">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="card-title">報價系統</h5>
+                                <h3 class="stat-value">567</h3>
+                            </div>
+                            <div class="stat-icon">
+                                <i class="fas fa-file-invoice-dollar"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card orders">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="card-title">訂單追蹤</h5>
+                                <h3 class="stat-value">890</h3>
+                            </div>
+                            <div class="stat-icon">
+                                <i class="fas fa-clipboard-list"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card sales">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="card-title">銷售額</h5>
+                                <h3 class="stat-value">¥1,234,567</h3>
+                            </div>
+                            <div class="stat-icon">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 待辦事項和通知 -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span>待辦事項</span>
+                        <a href="#" class="btn btn-sm btn-outline-primary">查看全部</a>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                <div>
+                                    <i class="fas fa-exclamation-circle text-danger me-2"></i>
+                                    <span>跟進宏遠科技詢單報價</span>
+                                </div>
+                                <span class="badge bg-danger rounded-pill">今天截止</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                <div>
+                                    <i class="fas fa-file-alt text-primary me-2"></i>
+                                    <span>完成峰創實業報價單</span>
+                                </div>
+                                <span class="badge bg-warning rounded-pill">明天截止</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                <div>
+                                    <i class="fas fa-phone-alt text-success me-2"></i>
+                                    <span>聯繫亞洲材料公司確認訂單</span>
+                                </div>
+                                <span class="badge bg-primary rounded-pill">3天后</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                <div>
+                                    <i class="fas fa-truck text-info me-2"></i>
+                                    <span>確認龍智訂單交付日期</span>
+                                </div>
+                                <span class="badge bg-info rounded-pill">本周内</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span>最新消息</span>
+                        <a href="#" class="btn btn-sm btn-outline-primary">查看全部</a>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item px-0">
+                                <div class="d-flex">
+                                    <div class="flex-shrink-0">
+                                        <i class="fas fa-envelope text-primary bg-light rounded-circle p-2"></i>
+                                    </div>
+                                    <div class="flex-grow-1 ms-3">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <h6 class="mb-0">李经理 (宏远科技)</h6>
+                                            <small class="text-muted">10:30 AM</small>
+                                        </div>
+                                        <p class="mb-0 text-muted">詢問產品交期可否提前？</p>
+                                    </div>
+                                </div>
+                            </li>
+                            <li class="list-group-item px-0">
+                                <div class="d-flex">
+                                    <div class="flex-shrink-0">
+                                        <i class="fab fa-line text-success bg-light rounded-circle p-2"></i>
+                                    </div>
+                                    <div class="flex-grow-1 ms-3">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <h6 class="mb-0">張總 (峰創實業)</h6>
+                                            <small class="text-muted">昨天</small>
+                                        </div>
+                                        <p class="mb-0 text-muted">收到您的報價單，需要詳細討論...</p>
+                                    </div>
+                                </div>
+                            </li>
+                            <li class="list-group-item px-0">
+                                <div class="d-flex">
+                                    <div class="flex-shrink-0">
+                                        <i class="fab fa-weixin text-primary bg-light rounded-circle p-2"></i>
+                                    </div>
+                                    <div class="flex-grow-1 ms-3">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <h6 class="mb-0">王工 (龍智科技)</h6>
+                                            <small class="text-muted">昨天</small>
+                                        </div>
+                                        <p class="mb-0 text-muted">發送了新的產品規格需求...</p>
+                                    </div>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 最近訂單 -->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span>最近訂單狀態</span>
+                        <a href="#" class="btn btn-sm btn-outline-primary">查看全部訂單</a>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>訂單編號</th>
+                                        <th>客戶名稱</th>
+                                        <th>產品名稱</th>
+                                        <th>訂單金額</th>
+                                        <th>訂單日期</th>
+                                        <th>狀態</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>ORD-2023-1001</td>
+                                        <td>宏遠科技</td>
+                                        <td>電子元件外殼</td>
+                                        <td>¥38,500</td>
+                                        <td>2023-06-15</td>
+                                        <td><span class="badge bg-warning text-dark status-badge">生產中</span></td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary" title="查看詳情" aria-label="查看宏遠科技訂單詳情"><i class="fas fa-eye"></i></button>
+                                            <button class="btn btn-sm btn-outline-success" title="編輯訂單" aria-label="編輯宏遠科技訂單"><i class="fas fa-edit"></i></button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>ORD-2023-1002</td>
+                                        <td>峰創實業</td>
+                                        <td>塑料注塑件</td>
+                                        <td>¥22,800</td>
+                                        <td>2023-06-10</td>
+                                        <td><span class="badge bg-info text-white status-badge">待發貨</span></td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary" title="查看詳情" aria-label="查看峰創實業訂單詳情"><i class="fas fa-eye"></i></button>
+                                            <button class="btn btn-sm btn-outline-success" title="編輯訂單" aria-label="編輯峰創實業訂單"><i class="fas fa-edit"></i></button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>ORD-2023-1003</td>
+                                        <td>亞洲材料公司</td>
+                                        <td>金屬衝壓件</td>
+                                        <td>¥56,000</td>
+                                        <td>2023-06-05</td>
+                                        <td><span class="badge bg-success text-white status-badge">已發貨</span></td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary" title="查看詳情" aria-label="查看亞洲材料公司訂單詳情"><i class="fas fa-eye"></i></button>
+                                            <button class="btn btn-sm btn-outline-success" title="編輯訂單" aria-label="編輯亞洲材料公司訂單"><i class="fas fa-edit"></i></button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>ORD-2023-1004</td>
+                                        <td>龍智科技</td>
+                                        <td>電子電路板</td>
+                                        <td>¥45,200</td>
+                                        <td>2023-06-01</td>
+                                        <td><span class="badge bg-secondary text-white status-badge">已完成</span></td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary" title="查看詳情" aria-label="查看龍智科技訂單詳情"><i class="fas fa-eye"></i></button>
+                                            <button class="btn btn-sm btn-outline-secondary" title="下載PDF" aria-label="下載龍智科技訂單PDF"><i class="fas fa-file-pdf"></i></button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+<script src="sidebar.js"></script>
+</body>
+</html> 

@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>客戶管理 - 企業管理系統</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- 引入側邊欄CSS -->
+    <link rel="stylesheet" href="sidebar.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background-color: #f8f9fa;
+        }
+        
+        .card {
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            border: none;
+        }
+        
+        .card-header {
+            background-color: white;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<!-- 側邊導航欄 -->
+<div id="sidebar-container"></div>
+
+<!-- 主要內容區域 -->
+<div class="content">
+    <div class="container-fluid">
+        <div class="row mb-4">
+            <div class="col-md-8">
+                <h2>客戶管理</h2>
+                <p class="text-muted">查看和管理所有客戶信息</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addCustomerModal">
+                    <i class="fas fa-plus"></i> 添加新客戶
+                </button>
+            </div>
+        </div>
+        
+        <!-- 搜索和篩選 -->
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                    <input type="text" class="form-control" placeholder="搜索客戶">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <select class="form-select" title="選擇客戶類型" aria-label="客戶類型選擇">
+                                    <option selected>客戶類型</option>
+                                    <option>新客戶</option>
+                                    <option>長期合作</option>
+                                    <option>VIP客戶</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <select class="form-select" title="選擇行業分類" aria-label="行業分類選擇">
+                                    <option selected>行業分類</option>
+                                    <option>電子</option>
+                                    <option>汽車</option>
+                                    <option>醫療</option>
+                                    <option>消費品</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <button class="btn btn-primary w-100">篩選</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 客戶列表 -->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <ul class="nav nav-tabs card-header-tabs" id="customerTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="all-tab" data-bs-toggle="tab" data-bs-target="#all" type="button" role="tab">所有客戶 (120)</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="vip-tab" data-bs-toggle="tab" data-bs-target="#vip" type="button" role="tab">VIP客戶 (18)</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="recent-tab" data-bs-toggle="tab" data-bs-target="#recent" type="button" role="tab">最近添加 (12)</button>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="card-body">
+                        <div class="tab-content" id="customerTabsContent">
+                            <div class="tab-pane fade show active" id="all" role="tabpanel">
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="checkbox" id="selectAll" title="選擇所有客戶" aria-label="選擇所有客戶">
+                                                    </div>
+                                                </th>
+                                                <th>公司名稱</th>
+                                                <th>聯繫人</th>
+                                                <th>聯繫方式</th>
+                                                <th>客戶類型</th>
+                                                <th>合作狀態</th>
+                                                <th>最近聯繫</th>
+                                                <th>操作</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="checkbox" title="選擇此客戶" aria-label="選擇宏遠科技有限公司">
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="bg-primary text-white rounded-circle p-2 me-2 text-center" style="width:40px;height:40px;">
+                                                            <i class="fas fa-building"></i>
+                                                        </div>
+                                                        <div>
+                                                            <h6 class="mb-0">宏遠科技有限公司</h6>
+                                                            <small class="text-muted">電子製造業</small>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>李經理</td>
+                                                <td>
+                                                    <div>13812345678</div>
+                                                    <small class="text-muted">li@hongyuan.com</small>
+                                                </td>
+                                                <td><span class="badge bg-success">VIP客戶</span></td>
+                                                <td><span class="badge bg-primary">長期合作</span></td>
+                                                <td>2023-06-15</td>
+                                                <td>
+                                                    <div class="dropdown">
+                                                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                                            操作
+                                                        </button>
+                                                        <ul class="dropdown-menu">
+                                                            <li><a class="dropdown-item" href="#"><i class="fas fa-eye me-2"></i>查看詳情</a></li>
+                                                            <li><a class="dropdown-item" href="#"><i class="fas fa-edit me-2"></i>編輯客戶</a></li>
+                                                            <li><a class="dropdown-item" href="#"><i class="fas fa-comment me-2"></i>聯繫記錄</a></li>
+                                                            <li><a class="dropdown-item" href="#"><i class="fas fa-file-invoice-dollar me-2"></i>創建報價</a></li>
+                                                            <li><hr class="dropdown-divider"></li>
+                                                            <li><a class="dropdown-item text-danger" href="#"><i class="fas fa-trash-alt me-2"></i>刪除客戶</a></li>
+                                                        </ul>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="checkbox" title="選擇此客戶" aria-label="選擇峰創實業有限公司">
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="bg-info text-white rounded-circle p-2 me-2 text-center" style="width:40px;height:40px;">
+                                                            <i class="fas fa-building"></i>
+                                                        </div>
+                                                        <div>
+                                                            <h6 class="mb-0">峰創實業有限公司</h6>
+                                                            <small class="text-muted">塑料製品</small>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>張總</td>
+                                                <td>
+                                                    <div>13987654321</div>
+                                                    <small class="text-muted">zhang@fengchuang.com</small>
+                                                </td>
+                                                <td><span class="badge bg-info">普通客戶</span></td>
+                                                <td><span class="badge bg-success">活躍</span></td>
+                                                <td>2023-06-10</td>
+                                                <td>
+                                                    <div class="dropdown">
+                                                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                                            操作
+                                                        </button>
+                                                        <ul class="dropdown-menu">
+                                                            <li><a class="dropdown-item" href="#"><i class="fas fa-eye me-2"></i>查看詳情</a></li>
+                                                            <li><a class="dropdown-item" href="#"><i class="fas fa-edit me-2"></i>編輯客戶</a></li>
+                                                            <li><a class="dropdown-item" href="#"><i class="fas fa-comment me-2"></i>聯繫記錄</a></li>
+                                                            <li><a class="dropdown-item" href="#"><i class="fas fa-file-invoice-dollar me-2"></i>創建報價</a></li>
+                                                            <li><hr class="dropdown-divider"></li>
+                                                            <li><a class="dropdown-item text-danger" href="#"><i class="fas fa-trash-alt me-2"></i>刪除客戶</a></li>
+                                                        </ul>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="checkbox" title="選擇此客戶" aria-label="選擇亞洲材料有限公司">
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="bg-warning text-white rounded-circle p-2 me-2 text-center" style="width:40px;height:40px;">
+                                                            <i class="fas fa-building"></i>
+                                                        </div>
+                                                        <div>
+                                                            <h6 class="mb-0">亞洲材料有限公司</h6>
+                                                            <small class="text-muted">金屬加工</small>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>王經理</td>
+                                                <td>
+                                                    <div>13765432198</div>
+                                                    <small class="text-muted">wang@asiam.com</small>
+                                                </td>
+                                                <td><span class="badge bg-warning text-dark">潛在客戶</span></td>
+                                                <td><span class="badge bg-warning text-dark">洽談中</span></td>
+                                                <td>2023-06-05</td>
+                                                <td>
+                                                    <div class="dropdown">
+                                                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                                            操作
+                                                        </button>
+                                                        <ul class="dropdown-menu">
+                                                            <li><a class="dropdown-item" href="#"><i class="fas fa-eye me-2"></i>查看詳情</a></li>
+                                                            <li><a class="dropdown-item" href="#"><i class="fas fa-edit me-2"></i>編輯客戶</a></li>
+                                                            <li><a class="dropdown-item" href="#"><i class="fas fa-comment me-2"></i>聯繫記錄</a></li>
+                                                            <li><a class="dropdown-item" href="#"><i class="fas fa-file-invoice-dollar me-2"></i>創建報價</a></li>
+                                                            <li><hr class="dropdown-divider"></li>
+                                                            <li><a class="dropdown-item text-danger" href="#"><i class="fas fa-trash-alt me-2"></i>刪除客戶</a></li>
+                                                        </ul>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <!-- 分頁 -->
+                                <nav aria-label="Page navigation">
+                                    <ul class="pagination justify-content-center">
+                                        <li class="page-item disabled">
+                                            <a class="page-link" href="#" tabindex="-1" aria-disabled="true">上一頁</a>
+                                        </li>
+                                        <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                                        <li class="page-item"><a class="page-link" href="#">2</a></li>
+                                        <li class="page-item"><a class="page-link" href="#">3</a></li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="#">下一頁</a>
+                                        </li>
+                                    </ul>
+                                </nav>
+                            </div>
+                            
+                            <!-- VIP客戶和最近添加的客戶選項卡內容 -->
+                            <div class="tab-pane fade" id="vip" role="tabpanel">
+                                <!-- VIP客戶表格內容 -->
+                                <p>顯示VIP客戶列表</p>
+                            </div>
+                            <div class="tab-pane fade" id="recent" role="tabpanel">
+                                <!-- 最近添加的客戶表格內容 -->
+                                <p>顯示最近添加的客戶列表</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 添加客戶模態框 -->
+<div class="modal fade" id="addCustomerModal" tabindex="-1" aria-labelledby="addCustomerModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addCustomerModalLabel">添加新客戶</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">公司名稱 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">行業分類</label>
+                            <select class="form-select">
+                                <option selected>請選擇行業</option>
+                                <option>電子製造</option>
+                                <option>汽車零部件</option>
+                                <option>醫療器械</option>
+                                <option>消費品</option>
+                                <option>其他</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">聯繫人 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">聯繫方式 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" required>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">合作狀態</label>
+                            <select class="form-select">
+                                <option selected>請選擇合作狀態</option>
+                                <option>新客戶</option>
+                                <option>長期合作</option>
+                                <option>VIP客戶</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">客戶類型</label>
+                            <select class="form-select">
+                                <option selected>請選擇客戶類型</option>
+                                <option>普通客戶</option>
+                                <option>潛在客戶</option>
+                                <option>VIP客戶</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <label class="form-label">備註</label>
+                            <textarea class="form-control" rows="3"></textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-12 text-end">
+                            <button type="submit" class="btn btn-primary">添加客戶</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 在底部添加側邊欄腳本 -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+<script src="sidebar.js"></script>
+</body>
+</html>

@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>訊息中心 - 企業管理系統</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- 引入側邊欄CSS -->
+    <link rel="stylesheet" href="sidebar.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background-color: #f8f9fa;
+        }
+        
+        .card {
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            border: none;
+        }
+        
+        .card-header {
+            background-color: white;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            font-weight: bold;
+        }
+        
+        .table-hover tbody tr:hover {
+            background-color: rgba(0,0,0,0.02);
+        }
+        
+        .badge-status {
+            padding: 6px 10px;
+            border-radius: 30px;
+            font-weight: normal;
+        }
+        
+        .status-completed {
+            background-color: #d1e7dd;
+            color: #0f5132;
+        }
+        
+        .status-pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        
+        .status-urgent {
+            background-color: #f8d7da;
+            color: #842029;
+        }
+        
+        .filter-tags {
+            margin-bottom: 15px;
+        }
+        
+        .filter-tag {
+            display: inline-block;
+            padding: 5px 12px;
+            margin-right: 8px;
+            margin-bottom: 8px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid #dee2e6;
+        }
+        
+        .filter-tag:hover, .filter-tag.active {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+        
+        .message-preview {
+            max-width: 300px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .message-action {
+            white-space: nowrap;
+        }
+        
+        .search-container {
+            position: relative;
+        }
+        
+        .search-container .form-control {
+            padding-left: 40px;
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 10px;
+            color: #6c757d;
+        }
+        
+        .advanced-filters {
+            padding: 15px;
+            border-radius: 5px;
+            background-color: #f8f9fa;
+            margin-bottom: 15px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<!-- 側邊導航 -->
+<div id="sidebar-container"></div>
+
+<!-- 主要內容區域 -->
+<div class="content">
+    <div class="container-fluid">
+        <div class="row mb-4">
+            <div class="col-md-8">
+                <h2>訊息中心</h2>
+                <p class="text-muted">管理和查看所有訊息</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#sendMessageModal">
+                    <i class="fas fa-plus"></i> 發送新訊息
+                </button>
+            </div>
+        </div>
+        
+        <!-- 搜尋和篩選區域 -->
+        <div class="row mb-3">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <div class="search-container">
+                                    <i class="fas fa-search search-icon"></i>
+                                    <input type="text" class="form-control" id="searchMessages" placeholder="搜尋訂單號、客戶名稱或訊息內容">
+                                </div>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <button class="btn btn-outline-secondary" id="toggleAdvancedFilters">
+                                    <i class="fas fa-filter"></i> 進階篩選
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- 進階篩選選項 (預設隱藏) -->
+                        <div class="advanced-filters mt-3" id="advancedFilters">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <label class="form-label">日期範圍</label>
+                                    <select class="form-select">
+                                        <option>全部時間</option>
+                                        <option>今天</option>
+                                        <option>過去7天</option>
+                                        <option>過去30天</option>
+                                        <option>自訂日期</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">訊息狀態</label>
+                                    <select class="form-select">
+                                        <option>全部狀態</option>
+                                        <option>已完成</option>
+                                        <option>處理中</option>
+                                        <option>未處理</option>
+                                        <option>緊急</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">訊息類型</label>
+                                    <select class="form-select">
+                                        <option>全部類型</option>
+                                        <option>系統通知</option>
+                                        <option>客戶訊息</option>
+                                        <option>內部訊息</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">處理人員</label>
+                                    <select class="form-select">
+                                        <option>全部人員</option>
+                                        <option>王小明</option>
+                                        <option>李大華</option>
+                                        <option>張美玲</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row mt-3">
+                                <div class="col-12 text-end">
+                                    <button class="btn btn-outline-secondary me-2">重置篩選</button>
+                                    <button class="btn btn-primary">應用篩選</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 標籤篩選區 -->
+                        <div class="filter-tags mt-3">
+                            <div class="filter-tag active" data-filter="all">全部訊息</div>
+                            <div class="filter-tag" data-filter="order">訂單相關</div>
+                            <div class="filter-tag" data-filter="customer">客戶相關</div>
+                            <div class="filter-tag" data-filter="quotation">報價相關</div>
+                            <div class="filter-tag" data-filter="logistic">物流相關</div>
+                            <div class="filter-tag" data-filter="system">系統通知</div>
+                            <div class="filter-tag" data-filter="internal">內部訊息</div>
+                            <div class="filter-tag status-tag" data-status="completed">已完成</div>
+                            <div class="filter-tag status-tag" data-status="pending">處理中</div>
+                            <div class="filter-tag status-tag" data-status="urgent">緊急</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 訊息表格 -->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover" id="messagesTable">
+                                <thead>
+                                    <tr>
+                                        <th width="5%"><input type="checkbox" class="form-check-input" id="selectAll"></th>
+                                        <th width="15%">日期時間</th>
+                                        <th width="15%">來源/接收者</th>
+                                        <th width="10%">類型</th>
+                                        <th width="30%">訊息內容</th>
+                                        <th width="10%">相關訂單</th>
+                                        <th width="10%">狀態</th>
+                                        <th width="5%">操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr data-category="customer" data-status="completed">
+                                        <td><input type="checkbox" class="form-check-input message-select"></td>
+                                        <td>2023-09-15 10:30</td>
+                                        <td>宏遠科技</td>
+                                        <td><span class="badge bg-info">客戶訊息</span></td>
+                                        <td class="message-preview">您好，請問有什麼可以幫助您的？</td>
+                                        <td><a href="#">ORD-2023-1001</a></td>
+                                        <td><span class="badge badge-status status-completed">已完成</span></td>
+                                        <td class="message-action">
+                                            <button class="btn btn-sm btn-outline-primary"><i class="fas fa-eye"></i></button>
+                                        </td>
+                                    </tr>
+                                    <tr data-category="customer" data-status="pending">
+                                        <td><input type="checkbox" class="form-check-input message-select"></td>
+                                        <td>2023-09-15 10:32</td>
+                                        <td>宏遠科技</td>
+                                        <td><span class="badge bg-info">客戶訊息</span></td>
+                                        <td class="message-preview">我想了解一下產品的詳細信息。</td>
+                                        <td><a href="#">ORD-2023-1001</a></td>
+                                        <td><span class="badge badge-status status-pending">處理中</span></td>
+                                        <td class="message-action">
+                                            <button class="btn btn-sm btn-outline-primary"><i class="fas fa-eye"></i></button>
+                                        </td>
+                                    </tr>
+                                    <tr data-category="order" data-status="urgent">
+                                        <td><input type="checkbox" class="form-check-input message-select"></td>
+                                        <td>2023-09-15 09:45</td>
+                                        <td>峰創實業</td>
+                                        <td><span class="badge bg-warning">訂單相關</span></td>
+                                        <td class="message-preview">關於訂單ORD-2023-1002的交貨日期需要提前</td>
+                                        <td><a href="#">ORD-2023-1002</a></td>
+                                        <td><span class="badge badge-status status-urgent">緊急</span></td>
+                                        <td class="message-action">
+                                            <button class="btn btn-sm btn-outline-primary"><i class="fas fa-eye"></i></button>
+                                        </td>
+                                    </tr>
+                                    <tr data-category="logistic" data-status="completed">
+                                        <td><input type="checkbox" class="form-check-input message-select"></td>
+                                        <td>2023-09-14 15:20</td>
+                                        <td>亞洲材料</td>
+                                        <td><span class="badge bg-secondary">物流相關</span></td>
+                                        <td class="message-preview">訂單ORD-2023-1003的貨物已經送達</td>
+                                        <td><a href="#">ORD-2023-1003</a></td>
+                                        <td><span class="badge badge-status status-completed">已完成</span></td>
+                                        <td class="message-action">
+                                            <button class="btn btn-sm btn-outline-primary"><i class="fas fa-eye"></i></button>
+                                        </td>
+                                    </tr>
+                                    <tr data-category="quotation" data-status="pending">
+                                        <td><input type="checkbox" class="form-check-input message-select"></td>
+                                        <td>2023-09-14 11:05</td>
+                                        <td>全球貿易</td>
+                                        <td><span class="badge bg-primary">報價相關</span></td>
+                                        <td class="message-preview">請提供最新的產品報價單</td>
+                                        <td>-</td>
+                                        <td><span class="badge badge-status status-pending">處理中</span></td>
+                                        <td class="message-action">
+                                            <button class="btn btn-sm btn-outline-primary"><i class="fas fa-eye"></i></button>
+                                        </td>
+                                    </tr>
+                                    <tr data-category="system" data-status="completed">
+                                        <td><input type="checkbox" class="form-check-input message-select"></td>
+                                        <td>2023-09-13 08:30</td>
+                                        <td>系統</td>
+                                        <td><span class="badge bg-dark">系統通知</span></td>
+                                        <td class="message-preview">系統維護通知：系統將在2023年9月20日22:00-24:00進行維護升級</td>
+                                        <td>-</td>
+                                        <td><span class="badge badge-status status-completed">已完成</span></td>
+                                        <td class="message-action">
+                                            <button class="btn btn-sm btn-outline-primary"><i class="fas fa-eye"></i></button>
+                                        </td>
+                                    </tr>
+                                    <tr data-category="internal" data-status="pending">
+                                        <td><input type="checkbox" class="form-check-input message-select"></td>
+                                        <td>2023-09-12 16:45</td>
+                                        <td>王小明 (業務)</td>
+                                        <td><span class="badge bg-success">內部訊息</span></td>
+                                        <td class="message-preview">關於下週與宏遠科技的會議安排</td>
+                                        <td>-</td>
+                                        <td><span class="badge badge-status status-pending">處理中</span></td>
+                                        <td class="message-action">
+                                            <button class="btn btn-sm btn-outline-primary"><i class="fas fa-eye"></i></button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- 分頁 -->
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <p>顯示 1 到 7 筆，共 42 筆訊息</p>
+                            </div>
+                            <div class="col-md-6">
+                                <nav aria-label="訊息分頁">
+                                    <ul class="pagination justify-content-end">
+                                        <li class="page-item disabled">
+                                            <a class="page-link" href="#" tabindex="-1">上一頁</a>
+                                        </li>
+                                        <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                                        <li class="page-item"><a class="page-link" href="#">2</a></li>
+                                        <li class="page-item"><a class="page-link" href="#">3</a></li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="#">下一頁</a>
+                                        </li>
+                                    </ul>
+                                </nav>
+                            </div>
+                        </div>
+                        
+                        <!-- 批量操作 -->
+                        <div class="row mt-3" id="bulkActionContainer" style="display: none;">
+                            <div class="col-md-12">
+                                <div class="bg-light p-3 rounded">
+                                    <span id="selectedCount">已選擇 0 個訊息</span>
+                                    <div class="btn-group ms-3">
+                                        <button class="btn btn-sm btn-success">標記為已完成</button>
+                                        <button class="btn btn-sm btn-warning">標記為處理中</button>
+                                        <button class="btn btn-sm btn-danger">標記為緊急</button>
+                                        <button class="btn btn-sm btn-secondary">封存訊息</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 發送訊息模態框 -->
+<div class="modal fade" id="sendMessageModal" tabindex="-1" aria-labelledby="sendMessageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="sendMessageModalLabel">發送新訊息</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">收件人 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">訊息類型</label>
+                            <select class="form-select">
+                                <option selected>選擇訊息類型</option>
+                                <option>系統通知</option>
+                                <option>客戶訊息</option>
+                                <option>內部訊息</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <label class="form-label">訊息內容</label>
+                            <textarea class="form-control" rows="4" placeholder="請輸入訊息內容"></textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <label class="form-label">附件上傳</label>
+                            <input type="file" class="form-control" multiple>
+                            <div class="form-text">可上傳文件（最大20MB）</div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="saveToSystem" checked>
+                                <label class="form-check-label" for="saveToSystem">
+                                    保存到系統訊息記錄
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="linkToOrder">
+                                <label class="form-check-label" for="linkToOrder">
+                                    關聯到訂單
+                                </label>
+                            </div>
+                            <div class="form-select-custom mt-2" id="orderSelectContainer" style="display: none;">
+                                <select class="form-select" aria-label="選擇關聯訂單">
+                                    <option selected>選擇關聯訂單</option>
+                                    <option>ORD-2023-1001 - 宏遠科技</option>
+                                    <option>ORD-2023-1002 - 峰創實業</option>
+                                    <option>ORD-2023-1003 - 亞洲材料</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary">發送訊息</button>
+                <button type="button" class="btn btn-outline-primary">保存為模板</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 訊息詳情模態框 -->
+<div class="modal fade" id="messageDetailModal" tabindex="-1" aria-labelledby="messageDetailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="messageDetailModalLabel">訊息詳情</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <p><strong>來源/接收者：</strong> <span id="messageDetailSender">宏遠科技</span></p>
+                        <p><strong>日期時間：</strong> <span id="messageDetailTime">2023-09-15 10:30</span></p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>訊息類型：</strong> <span id="messageDetailType" class="badge bg-info">客戶訊息</span></p>
+                        <p><strong>相關訂單：</strong> <a href="#" id="messageDetailOrder">ORD-2023-1001</a></p>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <span>訊息內容</span>
+                                <span id="messageDetailStatus" class="badge badge-status status-completed">已完成</span>
+                            </div>
+                            <div class="card-body">
+                                <p id="messageDetailContent">您好，請問有什麼可以幫助您的？</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-header">回覆記錄</div>
+                            <div class="card-body">
+                                <div class="border-bottom pb-3 mb-3">
+                                    <div class="d-flex justify-content-between">
+                                        <strong>王小明 (業務)</strong>
+                                        <small>2023-09-15 10:35</small>
+                                    </div>
+                                    <p>好的，我們的產品主要包括...</p>
+                                </div>
+                                <div>
+                                    <div class="d-flex justify-content-between">
+                                        <strong>李大華 (客服)</strong>
+                                        <small>2023-09-15 11:20</small>
+                                    </div>
+                                    <p>已向客戶提供了詳細的產品規格和價格信息。</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-floating">
+                            <textarea class="form-control" placeholder="輸入回覆內容" id="replyContent" style="height: 100px"></textarea>
+                            <label for="replyContent">輸入回覆內容</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">關閉</button>
+                <button type="button" class="btn btn-primary">發送回覆</button>
+                <div class="dropdown d-inline-block">
+                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        更多操作
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#">標記為已完成</a></li>
+                        <li><a class="dropdown-item" href="#">標記為處理中</a></li>
+                        <li><a class="dropdown-item" href="#">標記為緊急</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="#">轉發給其他人員</a></li>
+                        <li><a class="dropdown-item" href="#">加入到知識庫</a></li>
+                        <li><a class="dropdown-item" href="#">封存訊息</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 進階篩選切換
+    const toggleAdvancedFilters = document.getElementById('toggleAdvancedFilters');
+    const advancedFilters = document.getElementById('advancedFilters');
+    
+    if(toggleAdvancedFilters && advancedFilters) {
+        toggleAdvancedFilters.addEventListener('click', function() {
+            if(advancedFilters.style.display === 'block') {
+                advancedFilters.style.display = 'none';
+            } else {
+                advancedFilters.style.display = 'block';
+            }
+        });
+    }
+    
+    // 標籤篩選功能
+    const filterTags = document.querySelectorAll('.filter-tag');
+    const messageRows = document.querySelectorAll('#messagesTable tbody tr');
+    
+    filterTags.forEach(tag => {
+        tag.addEventListener('click', function() {
+            // 移除所有標籤的活動狀態
+            filterTags.forEach(t => t.classList.remove('active'));
+            
+            // 將當前標籤設為活動狀態
+            this.classList.add('active');
+            
+            const filter = this.getAttribute('data-filter');
+            const status = this.getAttribute('data-status');
+            
+            messageRows.forEach(row => {
+                const category = row.getAttribute('data-category');
+                const rowStatus = row.getAttribute('data-status');
+                
+                if(filter === 'all' || (filter && category === filter) || (status && rowStatus === status)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+    });
+    
+    // 搜尋功能
+    const searchInput = document.getElementById('searchMessages');
+    
+    if(searchInput) {
+        searchInput.addEventListener('input', function() {
+            const query = this.value.toLowerCase();
+            
+            messageRows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                if(text.includes(query)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+    }
+    
+    // 全選功能
+    const selectAll = document.getElementById('selectAll');
+    const messageSelect = document.querySelectorAll('.message-select');
+    const bulkActionContainer = document.getElementById('bulkActionContainer');
+    const selectedCount = document.getElementById('selectedCount');
+    
+    if(selectAll && messageSelect.length > 0 && bulkActionContainer && selectedCount) {
+        selectAll.addEventListener('change', function() {
+            const isChecked = this.checked;
+            
+            messageSelect.forEach(checkbox => {
+                checkbox.checked = isChecked;
+            });
+            
+            updateBulkActionVisibility();
+        });
+        
+        messageSelect.forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                updateBulkActionVisibility();
+            });
+        });
+        
+        function updateBulkActionVisibility() {
+            const checkedCount = document.querySelectorAll('.message-select:checked').length;
+            
+            if(checkedCount > 0) {
+                bulkActionContainer.style.display = 'block';
+                selectedCount.textContent = `已選擇 ${checkedCount} 個訊息`;
+            } else {
+                bulkActionContainer.style.display = 'none';
+            }
+            
+            // 更新全選複選框狀態
+            selectAll.checked = checkedCount === messageSelect.length;
+        }
+    }
+    
+    // 訊息詳情模態框
+    const viewButtons = document.querySelectorAll('.btn-outline-primary');
+    
+    if(viewButtons.length > 0) {
+        viewButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const messageRow = this.closest('tr');
+                
+                // 在實際應用中，你會從服務器獲取詳細信息
+                // 這裡僅用於演示
+                
+                const sender = messageRow.cells[2].textContent;
+                const time = messageRow.cells[1].textContent;
+                const type = messageRow.cells[3].querySelector('.badge').textContent;
+                const content = messageRow.cells[4].textContent;
+                const order = messageRow.cells[5].textContent;
+                const status = messageRow.cells[6].querySelector('.badge').className;
+                
+                document.getElementById('messageDetailSender').textContent = sender;
+                document.getElementById('messageDetailTime').textContent = time;
+                document.getElementById('messageDetailContent').textContent = content;
+                
+                // 如果需要可以更新其他字段
+                
+                const messageDetailModal = new bootstrap.Modal(document.getElementById('messageDetailModal'));
+                messageDetailModal.show();
+            });
+        });
+    }
+});
+</script>
+
+<script src="sidebar.js"></script>
+</body>
+</html>
